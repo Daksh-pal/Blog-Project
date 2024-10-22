@@ -2,9 +2,21 @@ import jwt from "jsonwebtoken";
 import User from "../models/userModel.js";
 import bcrypt from 'bcrypt'
 
+const validateEmail = (email) => {
+    const regex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    return regex.test(email);
+}
+
+
+const generateToken =  (id) => {
+    return jwt.sign({id} , process.env.JWT_KEY , {expiresIn : '1h'})
+}
+
+
 export const register = async (req,res) => {
     
     const {firstName , lastName, email , password} = req.body;
+    console.log(req.body,"   fjhfjefk");
     
     try {
         if(!firstName || !lastName || !email || !password){
@@ -13,7 +25,6 @@ export const register = async (req,res) => {
         
         
         if (!validateEmail(email)) {
-            console.log("Checkpoint 3");
             return res.status(400).json({ error: "Please enter a valid email address" });
         }
         
@@ -25,20 +36,20 @@ export const register = async (req,res) => {
         
         const hashedPassword = await bcrypt.hash(password,10);
         
-        const newUser = new User({firstName,lastName,email,password: hashedPassword});
+        const newUser = new User({firstName,lastName,email, password: hashedPassword});
+        
         await newUser.save();
 
-        const token = generateToken(newUser._id);
-
-        return res.status(200).json({Message : "User Registered Successfully" , token});
+        return res.status(200).json({Message : "User Regitered Successfully" });
 
     } catch (error) {
 
-        console.log("Inside catch  block in register function")
+        console.log("Inside catch  block in register function",error)
         return res.status(500).json({Error : error});
 
     }
 }
+
 
 
 export const login = async (req,res) => {
@@ -75,16 +86,10 @@ export const login = async (req,res) => {
     } catch (error) {
 
         console.log("Inside catch  block in register function")
+
         return res.status(500).json({Error : error});
 
     }
 }
 
-const generateToken =  (id) => {
-    return jwt.sign({id} , process.env.JWT_KEY , {expiresIn : '1h'})
-}
 
-const validateEmail = (email) => {
-    const regex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-    return regex.test(email);
-}
